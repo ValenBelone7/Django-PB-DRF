@@ -15,9 +15,7 @@ class User(AbstractUser):
 
 
 class Heredero(models.Model):
-    # el Main que lo designo
     main = models.ForeignKey(User, on_delete=models.CASCADE, related_name='herederos')
-    # la cuenta del heredero (puede no tener todavia)
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     nombre = models.CharField(max_length=100)
     porcentaje = models.DecimalField(max_digits=5, decimal_places=2, default=0)

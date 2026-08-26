@@ -10,14 +10,15 @@ from .serializers import HerederoSerializer
 @api_view(['GET', 'POST'])
 def herederos(request):
 	if request.method == 'GET':
-		queryset = Heredero.objects.all()
-		serializer = HerederoSerializer(queryset, many=True)
+		herederos = Heredero.objects.all()
+		serializer = HerederoSerializer(herederos, many=True)
 		return Response(serializer.data, status=status.HTTP_200_OK)
 
-	serializer = HerederoSerializer(data=request.data)
-	if serializer.is_valid():
-		serializer.save()
-		return Response(serializer.data, status=status.HTTP_201_CREATED)
+	if request.method == 'POST':
+		serializer = HerederoSerializer(data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=status.HTTP_201_CREATED)
 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

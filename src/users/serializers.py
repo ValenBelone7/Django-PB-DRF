@@ -17,7 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
 class HerederoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Heredero
-        fields = ['id', 'main', 'usuario', 'nombre', 'porcentaje', 'fecha_creacion']
+        fields = ['id',
+                  'main',
+                  'usuario',
+                  'nombre',
+                  'porcentaje',
+                  'fecha_creacion']
         read_only_fields = ['id', 'fecha_creacion']
 
 
