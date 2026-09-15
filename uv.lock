@@ -40,7 +40,7 @@ wheels = [
 [[package]]
 name = "safe-legacy"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "django" },
     { name = "djangorestframework" },
