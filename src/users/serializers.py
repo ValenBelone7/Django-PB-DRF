@@ -26,6 +26,20 @@ class HerederoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'fecha_creacion']
 
 
+class HerederoPublicSerializer(serializers.ModelSerializer):
+    usuario = UserSerializer(read_only=True)  # Nested Field
+
+    class Meta:
+        model = Heredero
+        fields = ['id',
+                  'main',
+                  'usuario',  # Nested Field
+                  'nombre',
+                  'porcentaje',
+                  'fecha_creacion']
+        read_only_fields = ['id', 'fecha_creacion']
+
+
 class CheckInSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckIn
