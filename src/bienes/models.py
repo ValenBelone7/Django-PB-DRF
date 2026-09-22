@@ -18,7 +18,9 @@ class Bien(models.Model):
         ('TRANSFERIDO', 'Transferido'),
     ]
 
-    propietario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    propietario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bienes',
+    )
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True)
     tipo = models.CharField(max_length=12, choices=TIPOS, default='OTRO')
@@ -35,8 +37,10 @@ class Bien(models.Model):
 
 class Asignacion(models.Model):
     # que heredero recibe que bien y cuanto
-    bien = models.ForeignKey(Bien, on_delete=models.CASCADE)
-    heredero = models.ForeignKey('users.Heredero', on_delete=models.CASCADE)
+    bien = models.ForeignKey(Bien, on_delete=models.CASCADE, related_name='asignaciones')
+    heredero = models.ForeignKey(
+        'users.Heredero', on_delete=models.CASCADE, related_name='asignaciones',
+    )
     porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
     fecha_asignacion = models.DateTimeField(auto_now_add=True)
 
