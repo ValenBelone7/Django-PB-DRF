@@ -505,24 +505,9 @@ PROCESADA
 
 ## 🌐 API REST
 
-Algunos endpoints posibles:
+### ✅ Implementados
 
-### Autenticación
-
-```http
-POST /api/auth/register/
-POST /api/auth/login/
-POST /api/auth/logout/
-```
-
-### Usuarios
-
-```http
-GET    /api/users/me/
-PUT    /api/users/me/
-```
-
-### Herederos
+#### Herederos
 
 ```http
 GET    /api/herederos/
@@ -532,7 +517,7 @@ PUT    /api/herederos/{id}/
 DELETE /api/herederos/{id}/
 ```
 
-### Bienes
+#### Bienes
 
 ```http
 GET    /api/bienes/
@@ -542,21 +527,40 @@ PUT    /api/bienes/{id}/
 DELETE /api/bienes/{id}/
 ```
 
-### Asignaciones
+En `GET /api/bienes/` y `GET /api/bienes/{id}/` el campo `propietario` se muestra distinto:
+en el listado viaja anidado (objeto completo), en el detalle viaja como id. Es intencional,
+son dos serializers distintos (`BienPublicSerializer` para lectura de listado, `BienSerializer`
+para escritura y detalle).
+
+#### Asignaciones
 
 ```http
 GET    /api/asignaciones/
 POST   /api/asignaciones/
+GET    /api/asignaciones/{id}/
 PUT    /api/asignaciones/{id}/
 DELETE /api/asignaciones/{id}/
 ```
 
-### Check-in
+`GET /api/asignaciones/` devuelve `bien` y `heredero` anidados (y dentro de `heredero`, su
+`usuario` también anidado).
+
+### 🚧 Pendientes (a futuro)
 
 ```http
+POST /api/auth/register/
+POST /api/auth/login/
+POST /api/auth/logout/
+
+GET  /api/users/me/
+PUT  /api/users/me/
+
 GET  /api/checkin/
 POST /api/checkin/
 ```
+
+Autenticación/JWT y check-in quedaron fuera de alcance de esta entrega (ver Decisiones
+tomadas en `PLAN.md`).
 
 ### Herencia
 
