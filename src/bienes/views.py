@@ -1,4 +1,5 @@
-from rest_framework import generics
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Asignacion, Bien
 from .serializers import (
@@ -9,8 +10,10 @@ from .serializers import (
 )
 
 
-class BienesListCreateAPIView(generics.ListCreateAPIView):
+# ModelViewSet: CRUD completo
+class BienViewSet(viewsets.ModelViewSet):
     queryset = Bien.objects.all().select_related("propietario")
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -18,22 +21,14 @@ class BienesListCreateAPIView(generics.ListCreateAPIView):
         return BienSerializer
 
 
-class BienDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Bien.objects.all()
-    serializer_class = BienSerializer
-
-
-class AsignacionesListCreateAPIView(generics.ListCreateAPIView):
+# ModelViewSet: CRUD completo
+class AsignacionViewSet(viewsets.ModelViewSet):
     queryset = Asignacion.objects.all().select_related(
         "bien", "heredero", "bien__propietario", "heredero__usuario"
     )
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def get_serializer_class(self):
         if self.request.method == "GET":
             return AsignacionPublicSerializer
         return AsignacionSerializer
-
-
-class AsignacionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Asignacion.objects.all()
-    serializer_class = AsignacionSerializer
