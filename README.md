@@ -505,7 +505,25 @@ PROCESADA
 
 ## 🌐 API REST
 
+> **Autenticación:** Todos los endpoints requieren autenticación con JWT (`Authorization: Bearer <token>`), salvo la obtención y refresco de tokens (`/api/token/` y `/api/token/refresh/`).
+
+### 🔑 Autenticación (JWT)
+
+```http
+POST /api/token/          # Obtiene par access y refresh
+POST /api/token/refresh/  # Renueva el access token con el refresh token
+```
+
 ### ✅ Implementados
+
+#### Usuarios (Solo lectura)
+
+```http
+GET /api/usuarios/
+GET /api/usuarios/{id}/
+```
+
+Permite listar y consultar detalles de usuarios (`ReadOnlyModelViewSet`). No admite creación ni edición por API (administración vía admin de Django).
 
 #### Herederos
 
@@ -514,8 +532,11 @@ GET    /api/herederos/
 POST   /api/herederos/
 GET    /api/herederos/{id}/
 PUT    /api/herederos/{id}/
+PATCH  /api/herederos/{id}/
 DELETE /api/herederos/{id}/
 ```
+
+En las lecturas (`GET`), devuelve el `usuario` anidado. En la creación y edición, se envía el `usuario` y el `main` como IDs.
 
 #### Bienes
 
@@ -524,13 +545,11 @@ GET    /api/bienes/
 POST   /api/bienes/
 GET    /api/bienes/{id}/
 PUT    /api/bienes/{id}/
+PATCH  /api/bienes/{id}/
 DELETE /api/bienes/{id}/
 ```
 
-En `GET /api/bienes/` y `GET /api/bienes/{id}/` el campo `propietario` se muestra distinto:
-en el listado viaja anidado (objeto completo), en el detalle viaja como id. Es intencional,
-son dos serializers distintos (`BienPublicSerializer` para lectura de listado, `BienSerializer`
-para escritura y detalle).
+Tanto en el listado como en la consulta individual (`GET`), devuelve el `propietario` anidado mediante `BienPublicSerializer` (ocultando datos sensibles). Para escritura (`POST`/`PUT`/`PATCH`), se utiliza `BienSerializer` con `propietario` como ID.
 
 #### Asignaciones
 
@@ -539,11 +558,19 @@ GET    /api/asignaciones/
 POST   /api/asignaciones/
 GET    /api/asignaciones/{id}/
 PUT    /api/asignaciones/{id}/
+PATCH  /api/asignaciones/{id}/
 DELETE /api/asignaciones/{id}/
 ```
 
-`GET /api/asignaciones/` devuelve `bien` y `heredero` anidados (y dentro de `heredero`, su
-`usuario` también anidado).
+En las lecturas (`GET`), devuelve `bien` y `heredero` anidados a dos niveles (incluyendo el `propietario` del bien y el `usuario` del heredero).
+
+### 📋 Checklist de la consigna — Entrega 3
+
+- [x] **ViewSets en reemplazo de Concrete Generics**: `BienViewSet`, `AsignacionViewSet`, `HerederoViewSet` (`ModelViewSet`) y `UserViewSet` (`ReadOnlyModelViewSet`).
+- [x] **Enrutamiento centralizado en `routers.py`**: `DefaultRouter` único en `src/nucleo/routers.py` incluido en `nucleo/urls.py`.
+- [x] **Seguridad con `permission_classes` en los ViewSets**: `IsAuthenticated` aplicado en todos los ViewSets.
+- [x] **Autenticación con `djangorestframework-simplejwt`**: Endpoints `/api/token/` y `/api/token/refresh/` (+ `SessionAuthentication` de DRF).
+- [x] **Una sola forma de escribir vistas en todo el proyecto**: Vistas unificadas en ViewSets; eliminadas `@api_view` y Concrete Generics anteriores.
 
 ### 🚧 Pendientes (a futuro)
 
@@ -559,8 +586,7 @@ GET  /api/checkin/
 POST /api/checkin/
 ```
 
-Autenticación/JWT y check-in quedaron fuera de alcance de esta entrega (ver Decisiones
-tomadas en `PLAN.md`).
+Los usuarios se crean actualmente desde `/admin/` o por comando `createsuperuser`. Check-in y registro público quedan para próximas iteraciones.
 
 ### Herencia
 
@@ -803,7 +829,6 @@ Si el proyecto continúa desarrollándose, podrían incorporarse:
 
 - Notificaciones por correo electrónico.
 - Avisos antes del vencimiento del check-in.
-- Autenticación mediante JWT.
 - Autenticación de dos factores (2FA).
 - Cifrado adicional de bienes sensibles.
 - Sistema de contactos de confianza.
