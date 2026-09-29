@@ -42,14 +42,16 @@ acá — lo que hace falta de esa entrega ya está en el código y en el README.
 | Fase | Estado | Responsable |
 |---|---|---|
 | 4 — ViewSets de `users` | ✅ **Hecha** (rama `fase-4/viewsets-users`) | Valen |
-| 5 — ViewSets de `bienes` | Pendiente | Tiago |
+| 5 — ViewSets de `bienes` | ✅ **Hecha** (rama `fase-5/viewsets-bienes`) | Valen |
 | 6 — JWT | Pendiente | Tiago |
 | 7 — Pruebas, README y merge | Pendiente | Tiago |
 
-**Tiago:** arrancá cada rama desde `develop` actualizado, **con la Fase 4 ya mergeada**
-(`git checkout develop && git pull`). `src/nucleo/routers.py` ya existe con `usuarios` y
-`herederos` registrados, y `nucleo/urls.py` ya incluye `router.urls`: en Fase 5 solo sumás
-las líneas de `bienes`. Hacé las fases en orden (5 → 6 → 7) y así no hay conflictos.
+**Tiago:** arrancá desde `develop` actualizado, **con las Fases 4 y 5 ya mergeadas**
+(`git checkout develop && git pull`). Los 4 ViewSets ya existen, `src/nucleo/routers.py` ya
+tiene los 4 registrados y `nucleo/urls.py` ya incluye `router.urls` (los `urls.py` de las apps
+ya no existen). Te quedan la Fase 6 (JWT) y después la Fase 7 (pruebas, README y merge).
+Antes de JWT, pegarle a la API sin autenticarse da **403**; después de tu Fase 6 tiene que
+dar **401**.
 
 **Rama base:** `develop`. Los nombres de rama siguen la numeración que ya veníamos usando
 (`fase-0` a `fase-3` en la Entrega 2), así que esta entrega arranca en `fase-4`.
@@ -239,8 +241,10 @@ Ya no lo incluye nadie; las rutas las genera el router.
 # Fase 5 — ViewSets de `bienes`
 
 **Rama:** `fase-5/viewsets-bienes`
-**Responsable:** Tiago
-**Depende de:** Fase 4 mergeada a `develop` (ya existe `src/nucleo/routers.py`).
+**Responsable:** Valen
+**Estado:** ✅ Hecha (rama `fase-5/viewsets-bienes`, sale de `fase-4/viewsets-users`). Las 8
+operaciones verificadas con el test client; sin sesión da 403 hasta Fase 6. `manage.py check` y
+`ruff` limpios en los archivos tocados. **No se hizo el opcional 5.5 (`@action`).**
 
 ### 5.1 — Reescribir `src/bienes/views.py`
 
@@ -383,7 +387,8 @@ usuario del token).
 **Rama:** `fase-6/auth-jwt`
 **Responsable:** Tiago (es chica — solo toca `pyproject.toml`, `settings.py` y el `urls.py`
 raíz).
-**Depende de:** conviene hacerla después de Fase 5, para no pisarse en `nucleo/urls.py`.
+**Depende de:** Fases 4 y 5 mergeadas a `develop`. En `nucleo/urls.py` solo se suman el import
+y las dos rutas de token; el resto ya está en su estado final.
 
 ### 6.1 — Agregar la dependencia
 
@@ -503,7 +508,7 @@ O por Pull Request desde GitHub, como en la Entrega 2.
 | Fase | Rama | Quién | Orden |
 |---|---|---|---|
 | 4 | `fase-4/viewsets-users` | Valen | ✅ hecha |
-| 5 | `fase-5/viewsets-bienes` | Tiago | después de Fase 4 |
+| 5 | `fase-5/viewsets-bienes` | Valen | ✅ hecha |
 | 6 | `fase-6/auth-jwt` | Tiago | después de Fase 5 |
 | 7 | `fase-7/documentacion` | Tiago | no, va última |
 
