@@ -218,7 +218,7 @@ Se podrá utilizar:
 - GitHub
 - Postman
 - Docker _(opcional)_
-- Swagger / OpenAPI _(opcional)_
+- Swagger / OpenAPI (drf-spectacular)
 
 ---
 
@@ -512,6 +512,28 @@ PROCESADA
 ```http
 POST /api/token/          # Obtiene par access y refresh
 POST /api/token/refresh/  # Renueva el access token con el refresh token
+```
+
+### 📖 Documentación interactiva (OpenAPI)
+
+La API se documenta automáticamente con [drf-spectacular](https://drf-spectacular.readthedocs.io/) a partir de los ViewSets y serializers, siguiendo el estándar **OpenAPI 3**:
+
+```http
+GET /api/schema/         # Esquema OpenAPI en YAML (descarga el archivo)
+GET /api/docs/swagger/   # Swagger UI: permite probar los endpoints desde el navegador
+GET /api/docs/redoc/     # ReDoc: documentación de solo lectura
+```
+
+Para probar endpoints desde Swagger:
+
+1. Ejecutar `POST /api/token/` con usuario y contraseña ("Try it out") y copiar el `access`.
+2. Presionar **Authorize**, pegar el token en `jwtAuth` y confirmar.
+3. Si ya se inició sesión en `/admin/`, Swagger también funciona con la cookie de sesión (`SessionAuthentication`).
+
+Para validar el esquema desde la terminal:
+
+```shell
+uv run src/manage.py spectacular --validate --file schema.yml
 ```
 
 ### ✅ Implementados
