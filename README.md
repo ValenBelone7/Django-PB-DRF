@@ -1,883 +1,114 @@
-# Safe Legacy
+# Safe Legacy API
 
-## Herencia Digital Segura
+A REST API for planning a **digital inheritance**: a user registers their heirs and digital assets (money, files, passwords, Bitcoin…) and decides which heir gets what share of each asset if they stop checking in.
 
-Aplicación web desarrollada con **Django REST Framework** como Trabajo Práctico. El proyecto propone una plataforma para gestionar una **herencia digital**, permitiendo que una persona pueda registrar, organizar y asignar bienes digitales a diferentes herederos para que sean entregados automáticamente bajo determinadas condiciones.
+> University project (team assignment) built with Django REST Framework. Everything is simulated: no real money, credentials or crypto keys are handled.
 
----
+![Swagger UI of the Safe Legacy API](docs/swagger.png)
 
-## 📌 Descripción del proyecto
+## Features
+- **JWT authentication**: every endpoint requires a Bearer token, except getting and refreshing the token.
+- **Heirs**: a *Main* user registers the people who will inherit from them, optionally linked to their own account.
+- **Digital assets**: money, files, images, passwords, documents, Bitcoin and others. Each asset stays `BLOCKED` until the inheritance is released.
+- **Asset allocation**: split one asset between several heirs by percentage (e.g. 50% / 50%).
+- **Interactive docs**: OpenAPI 3 schema with Swagger UI and ReDoc, generated with drf-spectacular.
 
-**Safe Legacy** es una aplicación de herencia digital en la que un usuario principal, denominado **Main**, puede preparar su patrimonio digital para que, en caso de dejar de reportar actividad durante un período determinado, los bienes previamente asignados sean transferidos a sus herederos.
+## Tech stack
+Python 3.12 · Django 6.1 · Django REST Framework · Simple JWT · drf-spectacular · SQLite · uv
 
-El sistema busca representar de manera simulada qué ocurriría con los bienes digitales de una persona cuando esta ya no puede administrarlos.
+## Data model
 
-El usuario **Main** podrá:
+```mermaid
+erDiagram
+    USER ||--o{ HEIR : designates
+    USER |o--o{ HEIR : "is linked as"
+    USER ||--o{ ASSET : owns
+    ASSET ||--o{ ALLOCATION : "is split into"
+    HEIR ||--o{ ALLOCATION : receives
+    USER ||--o| CHECKIN : reports
+    USER ||--o| INHERITANCE : has
+    USER ||--o| WALLET : has
+    WALLET |o--o{ TRANSACTION : "sends / receives"
 
-- Registrar herederos.
-- Administrar un saldo de dinero virtual.
-- Distribuir dinero entre sus herederos.
-- Subir y almacenar archivos.
-- Registrar imágenes y documentos.
-- Guardar credenciales y contraseñas.
-- Registrar otros bienes de valor digital.
-- Simular la herencia de una cuenta de Bitcoin.
-- Definir qué heredero recibirá cada bien.
-- Establecer un período máximo de días sin reportar actividad.
-- Confirmar periódicamente que continúa con vida y utilizando la plataforma.
-
-Mientras el usuario Main continúe reportando actividad, la herencia permanecerá **bloqueada**.
-
-Si el período establecido finaliza sin que el usuario confirme su actividad, el sistema activará el proceso de herencia y los bienes serán entregados a los herederos según la distribución previamente configurada.
-
----
-
-## 🎯 Objetivos
-
-### Objetivo general
-
-Desarrollar una API REST utilizando **Django REST Framework** que permita gestionar de forma simulada una plataforma de herencia digital, aplicando conceptos de autenticación, autorización, relaciones entre modelos, almacenamiento de información y lógica de negocio.
-
-### Objetivos específicos
-
-- Implementar un sistema de usuarios y autenticación.
-- Diferenciar al usuario principal de sus herederos.
-- Permitir registrar y administrar herederos.
-- Gestionar bienes digitales pertenecientes al usuario Main.
-- Permitir asignar bienes a diferentes herederos.
-- Implementar un sistema de dinero virtual.
-- Simular la transferencia de criptomonedas.
-- Implementar un mecanismo de comprobación periódica de actividad.
-- Detectar cuándo el usuario Main deja de reportar actividad.
-- Activar automáticamente la herencia cuando se cumplan las condiciones.
-- Aplicar permisos para proteger la información privada.
-- Exponer la funcionalidad mediante una API REST.
-- Documentar y probar los endpoints de la aplicación.
-
----
-
-## 👤 Roles del sistema
-
-### Main
-
-Es el usuario que posee los bienes digitales y configura su herencia.
-
-Puede:
-
-- Administrar su perfil.
-- Agregar y eliminar herederos.
-- Crear bienes digitales.
-- Asignar bienes a herederos.
-- Administrar su dinero virtual.
-- Establecer el período de comprobación.
-- Reportar que continúa activo.
-- Consultar el estado de su herencia.
-
-### Heredero
-
-Es un usuario que fue designado por un Main para recibir determinados bienes.
-
-Puede:
-
-- Consultar las herencias que tiene asignadas.
-- Acceder a los bienes que le fueron transferidos.
-- Recibir dinero virtual.
-- Recibir archivos y otros bienes digitales.
-- Recibir activos digitales simulados.
-
-Los bienes permanecen ocultos o bloqueados para el heredero hasta que la herencia sea activada.
-
----
-
-## 💰 Bienes digitales
-
-La aplicación permitirá manejar diferentes tipos de bienes.
-
-Algunos ejemplos son:
-
-| Tipo         | Ejemplo                  |
-| ------------ | ------------------------ |
-| Dinero       | $50.000 de saldo virtual |
-| Archivo      | Documento PDF            |
-| Imagen       | Fotografía               |
-| Contraseña   | Credencial de una cuenta |
-| Documento    | Documento personal       |
-| Criptomoneda | 0.05 BTC                 |
-| Otro         | Cualquier activo digital |
-
-Cada bien podrá tener información como:
-
-- Nombre.
-- Descripción.
-- Tipo.
-- Valor.
-- Propietario.
-- Heredero asignado.
-- Fecha de creación.
-- Estado.
-- Fecha de transferencia.
-
----
-
-## ₿ Criptomonedas
-
-Como parte del alcance académico, se podrá simular la existencia de criptomonedas.
-
-Por ejemplo:
-
-```text
-Activo: Bitcoin
-Cantidad: 0.05 BTC
-Propietario: Usuario Main
-Heredero: Juan Pérez
-Estado: Bloqueado
+    USER {
+        string username
+        string role "MAIN or HEREDERO"
+    }
+    HEIR {
+        string nombre
+        decimal porcentaje
+    }
+    ASSET {
+        string nombre
+        string tipo "DINERO, ARCHIVO, BITCOIN..."
+        decimal valor
+        file archivo
+        string estado "BLOQUEADO or TRANSFERIDO"
+    }
+    ALLOCATION {
+        decimal porcentaje
+    }
+    CHECKIN {
+        int periodo_dias
+        datetime fecha_vencimiento
+        string estado
+    }
+    INHERITANCE {
+        string estado "PENDIENTE, ACTIVA, PROCESADA"
+    }
 ```
 
-No se realizará una transferencia real en la blockchain.
-
-La aplicación solamente representará el activo y su posterior transferencia dentro del sistema.
-
----
-
-## ⏱️ Sistema de comprobación de vida
-
-Una de las funcionalidades principales será el sistema de **Check-in**.
-
-El usuario Main deberá reportar periódicamente que continúa activo.
-
-Por ejemplo:
-
-```text
-Período configurado: 30 días
-
-Último check-in:
-25/08/2026
-
-Próximo vencimiento:
-24/09/2026
-```
-
-Cada vez que el usuario presione el botón **"Estoy activo"**, se actualizará la fecha de su último reporte.
-
-Mientras el usuario realice el check-in dentro del período establecido, la herencia continuará bloqueada.
-
-### Activación de la herencia
-
-Si el usuario no realiza el check-in y supera el período configurado:
-
-```text
-Último check-in: 25/08/2026
-Período: 30 días
-Fecha límite: 24/09/2026
-
-Estado → HERENCIA ACTIVADA
-```
-
-El sistema deberá procesar la distribución de los bienes según las asignaciones previamente realizadas.
-
----
-
-## 🔐 Seguridad
-
-Debido a que el sistema manejará información potencialmente sensible, la seguridad será una parte importante del proyecto.
-
-Se deberán implementar mecanismos como:
-
-- Autenticación de usuarios.
-- Autorización mediante permisos.
-- Protección de endpoints.
-- Separación de información entre usuarios.
-- Validación de datos.
-- Contraseñas almacenadas mediante mecanismos seguros.
-- Protección de archivos.
-- Restricción de acceso a bienes heredados.
-- Control de acceso según el estado de la herencia.
-
-> **Nota:** En una aplicación real, almacenar contraseñas, claves privadas de criptomonedas u otros secretos requeriría medidas de seguridad mucho más avanzadas. Para este Trabajo Práctico se trabajará con información simulada y se priorizará la demostración de la arquitectura y la lógica de negocio.
-
----
-
-## 🏗️ Tecnologías
-
-### Backend
-
-- **Python**
-- **Django**
-- **Django REST Framework**
-
-### Base de datos
-
-Se podrá utilizar:
-
-- MySQL / MariaDB
-- SQLite para desarrollo y pruebas
-
-### Herramientas complementarias
-
-- Git
-- GitHub
-- Postman
-- Docker _(opcional)_
-- Swagger / OpenAPI (drf-spectacular)
-
----
-
-## 🧩 Arquitectura propuesta
-
-La aplicación estará desarrollada siguiendo una arquitectura basada en Django y Django REST Framework.
-
-```text
-Cliente
-   │
-   ▼
-API REST
-   │
-   ▼
-Django REST Framework
-   │
-   ├── Autenticación
-   ├── Usuarios
-   ├── Herederos
-   ├── Bienes
-   ├── Herencias
-   ├── Dinero virtual
-   └── Check-in
-   │
-   ▼
-Base de datos
-```
-
----
-
-## 🗄️ Modelos principales
-
-Una posible estructura inicial de modelos sería:
-
-### User
-
-Representa a los usuarios de la aplicación.
-
-```text
-User
-├── id
-├── username
-├── email
-├── password
-├── first_name
-├── last_name
-└── role
-```
-
-El campo `role` podría diferenciar entre:
-
-```text
-MAIN
-HEREDERO
-```
-
----
-
-### Heredero
-
-Representa la relación entre un Main y una persona designada como heredero.
-
-```text
-Heredero
-├── id
-├── main
-├── usuario
-├── nombre
-├── porcentaje
-└── fecha_creacion
-```
-
-Un Main podrá tener múltiples herederos.
-
----
-
-### Bien
-
-Representa cualquier activo digital que pueda formar parte de la herencia.
-
-```text
-Bien
-├── id
-├── propietario
-├── nombre
-├── descripcion
-├── tipo
-├── valor
-├── archivo
-├── estado
-└── fecha_creacion
-```
-
-Ejemplos de `tipo`:
-
-```text
-DINERO
-ARCHIVO
-IMAGEN
-CONTRASEÑA
-DOCUMENTO
-BITCOIN
-OTRO
-```
-
----
-
-### Asignación
-
-Permite determinar qué heredero recibe cada bien.
-
-```text
-Asignacion
-├── id
-├── bien
-├── heredero
-├── porcentaje
-└── fecha_asignacion
-```
-
-Esto permite representar situaciones como:
-
-```text
-Bitcoin → Heredero A → 50%
-Bitcoin → Heredero B → 50%
-```
-
-o:
-
-```text
-Archivo "Fotos Familiares"
-        ↓
-Heredero A → 100%
-```
-
----
-
-### Billetera
-
-Representa el dinero virtual disponible del usuario.
-
-```text
-Billetera
-├── id
-├── usuario
-└── saldo
-```
-
-El dinero podrá utilizarse como otro tipo de bien heredable.
-
----
-
-### Transacción
-
-Registra los movimientos de dinero dentro de la aplicación.
-
-```text
-Transaccion
-├── id
-├── origen
-├── destino
-├── monto
-├── tipo
-└── fecha
-```
-
----
-
-### CheckIn
-
-Registra la actividad del usuario Main.
-
-```text
-CheckIn
-├── id
-├── usuario
-├── ultima_confirmacion
-├── periodo_dias
-├── fecha_vencimiento
-└── estado
-```
-
-Estados posibles:
-
-```text
-ACTIVO
-ADVERTENCIA
-VENCIDO
-HERENCIA_ACTIVADA
-```
-
----
-
-### Herencia
-
-Representa el proceso de activación y transferencia.
-
-```text
-Herencia
-├── id
-├── main
-├── fecha_activacion
-├── estado
-└── fecha_finalizacion
-```
-
-Estados posibles:
-
-```text
-PENDIENTE
-ACTIVA
-PROCESADA
-```
-
----
-
-## 🔄 Flujo principal de la aplicación
-
-```text
-                 ┌─────────────────────┐
-                 │   Usuario se registra│
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │   Se convierte en   │
-                 │        MAIN         │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │ Agrega herederos    │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │ Registra sus bienes │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │ Asigna bienes a los │
-                 │      herederos      │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │ Configura período   │
-                 │     de check-in     │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │    Realiza Check-in │◄──────┐
-                 └──────────┬──────────┘       │
-                            │                  │
-                     ¿Venció el período?       │
-                       │             │         │
-                      NO            SÍ         │
-                       │             │         │
-                       └─────────────┘         │
-                             │                 │
-                             ▼                 │
-                    ┌────────────────┐         │
-                    │ Activar herencia│         │
-                    └───────┬────────┘         │
-                            │                  │
-                            ▼                  │
-                    ┌────────────────┐         │
-                    │ Transferir los │         │
-                    │     bienes     │         │
-                    └───────┬────────┘         │
-                            │                  │
-                            ▼                  │
-                    ┌────────────────┐         │
-                    │    Herederos   │         │
-                    │ reciben bienes │         │
-                    └────────────────┘         │
-                                              │
-                                              └── Check-in
-```
-
----
-
-## 🌐 API REST
-
-> **Autenticación:** Todos los endpoints requieren autenticación con JWT (`Authorization: Bearer <token>`), salvo la obtención y refresco de tokens (`/api/token/` y `/api/token/refresh/`).
-
-### 🔑 Autenticación (JWT)
-
-```http
-POST /api/token/          # Obtiene par access y refresh
-POST /api/token/refresh/  # Renueva el access token con el refresh token
-```
-
-### 📖 Documentación interactiva (OpenAPI)
-
-La API se documenta automáticamente con [drf-spectacular](https://drf-spectacular.readthedocs.io/) a partir de los ViewSets y serializers, siguiendo el estándar **OpenAPI 3**:
-
-```http
-GET /api/schema/         # Esquema OpenAPI en YAML (descarga el archivo)
-GET /api/docs/swagger/   # Swagger UI: permite probar los endpoints desde el navegador
-GET /api/docs/redoc/     # ReDoc: documentación de solo lectura
-```
-
-Para probar endpoints desde Swagger:
-
-1. Ejecutar `POST /api/token/` con usuario y contraseña ("Try it out") y copiar el `access`.
-2. Presionar **Authorize**, pegar el token en `jwtAuth` y confirmar.
-3. Si ya se inició sesión en `/admin/`, Swagger también funciona con la cookie de sesión (`SessionAuthentication`).
-
-Para validar el esquema desde la terminal:
-
-```shell
-uv run src/manage.py spectacular --validate --file schema.yml
-```
-
-### ✅ Implementados
-
-#### Usuarios (Solo lectura)
-
-```http
-GET /api/usuarios/
-GET /api/usuarios/{id}/
-```
-
-Permite listar y consultar detalles de usuarios (`ReadOnlyModelViewSet`). No admite creación ni edición por API (administración vía admin de Django).
-
-#### Herederos
-
-```http
-GET    /api/herederos/
-POST   /api/herederos/
-GET    /api/herederos/{id}/
-PUT    /api/herederos/{id}/
-PATCH  /api/herederos/{id}/
-DELETE /api/herederos/{id}/
-```
-
-En las lecturas (`GET`), devuelve el `usuario` anidado. En la creación y edición, se envía el `usuario` y el `main` como IDs.
-
-#### Bienes
-
-```http
-GET    /api/bienes/
-POST   /api/bienes/
-GET    /api/bienes/{id}/
-PUT    /api/bienes/{id}/
-PATCH  /api/bienes/{id}/
-DELETE /api/bienes/{id}/
-```
-
-Tanto en el listado como en la consulta individual (`GET`), devuelve el `propietario` anidado mediante `BienPublicSerializer` (ocultando datos sensibles). Para escritura (`POST`/`PUT`/`PATCH`), se utiliza `BienSerializer` con `propietario` como ID.
-
-#### Asignaciones
-
-```http
-GET    /api/asignaciones/
-POST   /api/asignaciones/
-GET    /api/asignaciones/{id}/
-PUT    /api/asignaciones/{id}/
-PATCH  /api/asignaciones/{id}/
-DELETE /api/asignaciones/{id}/
-```
-
-En las lecturas (`GET`), devuelve `bien` y `heredero` anidados a dos niveles (incluyendo el `propietario` del bien y el `usuario` del heredero).
-
-### 📋 Checklist de la consigna — Entrega 3
-
-- [x] **ViewSets en reemplazo de Concrete Generics**: `BienViewSet`, `AsignacionViewSet`, `HerederoViewSet` (`ModelViewSet`) y `UserViewSet` (`ReadOnlyModelViewSet`).
-- [x] **Enrutamiento centralizado en `routers.py`**: `DefaultRouter` único en `src/nucleo/routers.py` incluido en `nucleo/urls.py`.
-- [x] **Seguridad con `permission_classes` en los ViewSets**: `IsAuthenticated` aplicado en todos los ViewSets.
-- [x] **Autenticación con `djangorestframework-simplejwt`**: Endpoints `/api/token/` y `/api/token/refresh/` (+ `SessionAuthentication` de DRF).
-- [x] **Una sola forma de escribir vistas en todo el proyecto**: Vistas unificadas en ViewSets; eliminadas `@api_view` y Concrete Generics anteriores.
-
-### 🚧 Pendientes (a futuro)
-
-```http
-POST /api/auth/register/
-POST /api/auth/login/
-POST /api/auth/logout/
-
-GET  /api/users/me/
-PUT  /api/users/me/
-
-GET  /api/checkin/
-POST /api/checkin/
-```
-
-Los usuarios se crean actualmente desde `/admin/` o por comando `createsuperuser`. Check-in y registro público quedan para próximas iteraciones.
-
-### Herencia
-
-```http
-GET /api/herencia/
-POST /api/herencia/procesar/
-```
-
-### Billetera
-
-```http
-GET  /api/wallet/
-POST /api/wallet/depositar/
-POST /api/wallet/transferir/
-```
-
----
-
-## 🧪 Ejemplo de uso
-
-Un usuario llamado **Carlos** crea una cuenta y configura su herencia.
-
-### 1. Agrega herederos
-
-```text
-Ana
-Juan
-```
-
-### 2. Registra sus bienes
-
-```text
-$100.000 de dinero virtual
-Notebook
-Fotos familiares
-Contraseña de una cuenta
-0.05 BTC
-```
-
-### 3. Distribuye los bienes
-
-```text
-$100.000
-├── Ana → $60.000
-└── Juan → $40.000
-
-Notebook
-└── Juan → 100%
-
-Fotos familiares
-└── Ana → 100%
-
-0.05 BTC
-├── Ana → 50%
-└── Juan → 50%
-```
-
-### 4. Configura el check-in
-
-```text
-Período: 30 días
-```
-
-Carlos deberá ingresar periódicamente y confirmar:
-
-> "Estoy activo"
-
-### 5. Carlos deja de realizar check-in
-
-Una vez superados los 30 días, el sistema detecta el vencimiento.
-
-### 6. Se activa la herencia
-
-El sistema procesa automáticamente las asignaciones:
-
-```text
-Ana
-├── $60.000
-├── Fotos familiares
-└── 0.025 BTC
-
-Juan
-├── $40.000
-├── Notebook
-└── 0.025 BTC
-```
-
----
-
-## 📋 Alcance del Trabajo Práctico
-
-El proyecto tendrá como objetivo demostrar conocimientos de:
-
-- Django.
-- Django REST Framework.
-- Modelado de bases de datos.
-- Relaciones entre modelos.
-- CRUD.
-- APIs REST.
-- Serializers.
-- Views / ViewSets.
-- Routers.
-- Autenticación.
-- Permisos.
-- Validaciones.
-- Manejo de archivos.
-- Lógica de negocio.
-- Manejo de estados.
-- Pruebas de API.
-
-El sistema será una **simulación académica** y no realizará transferencias monetarias reales ni operaciones reales de criptomonedas.
-
----
-
-## 🚀 Instalación
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/usuario/safe-legacy.git
-cd safe-legacy
-```
-
-### 2. Crear entorno virtual
-
-Linux/macOS:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Windows:
-
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-### 3. Instalar dependencias
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configurar variables de entorno
-
-Crear un archivo `.env`:
-
-```env
-SECRET_KEY=tu_secret_key
-DEBUG=True
-
-DB_NAME=safe_legacy
-DB_USER=root
-DB_PASSWORD=
-DB_HOST=localhost
-DB_PORT=3306
-```
-
-### 5. Ejecutar migraciones
-
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 6. Crear superusuario
-
-```bash
-python manage.py createsuperuser
-```
-
-### 7. Ejecutar el servidor
-
-```bash
-python manage.py runserver
-```
-
-La API estará disponible en:
-
-```text
-http://127.0.0.1:8000/
-```
-
----
-
-## 📁 Estructura propuesta
-
-```text
-safe-legacy/
-│
-├── manage.py
-├── requirements.txt
-├── README.md
-├── .env
-├── .gitignore
-│
-├── config/
-│   ├── settings.py
-│   ├── urls.py
-│   ├── asgi.py
-│   └── wsgi.py
-│
-├── users/
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   ├── urls.py
-│   └── permissions.py
-│
-├── inheritance/
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   ├── urls.py
-│   └── services.py
-│
-├── assets/
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   └── urls.py
-│
-├── wallet/
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   └── urls.py
-│
-└── media/
-    └── ...
-```
-
----
-
-## 🔮 Posibles mejoras futuras
-
-Si el proyecto continúa desarrollándose, podrían incorporarse:
-
-- Notificaciones por correo electrónico.
-- Avisos antes del vencimiento del check-in.
-- Autenticación de dos factores (2FA).
-- Cifrado adicional de bienes sensibles.
-- Sistema de contactos de confianza.
-- Historial completo de movimientos.
-- Registro de auditoría.
-- Panel administrativo.
-- Frontend independiente con React.
-- Integración con una blockchain de prueba.
-- Sistema de testamento digital con múltiples niveles de autorización.
-- Recuperación ante intentos de acceso no autorizados.
-
----
-
-## 👨‍💻 Estado del proyecto
-
-**Estado:** 🚧 En desarrollo
-
-**Tipo:** Trabajo Práctico
-
-**Backend:** Django + Django REST Framework
-
-**Base de datos:** MySQL / MariaDB
-
-**Objetivo:** Desarrollo de una API REST para la gestión simulada de herencia digital.
-
----
-
-## 📄 Licencia
-
-Proyecto desarrollado con fines **educativos y académicos**. No debe utilizarse para gestionar dinero real, credenciales reales, claves privadas de criptomonedas ni otros datos sensibles sin implementar previamente mecanismos de seguridad adecuados.
+The code uses Spanish names: `Heredero` (heir), `Bien` (asset), `Asignacion` (allocation), `Herencia` (inheritance), `Billetera` (wallet), `Transaccion` (transaction). `CheckIn`, `Herencia`, `Billetera` and `Transaccion` are modeled but don't have endpoints yet (see [Roadmap](#roadmap)).
+
+## API endpoints
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/token/` | Get an access/refresh JWT pair | No |
+| POST | `/api/token/refresh/` | Get a new access token | No |
+| GET | `/api/usuarios/` | List users (read-only) | Yes |
+| GET, POST | `/api/herederos/` | List / create heirs | Yes |
+| GET, PUT, PATCH, DELETE | `/api/herederos/{id}/` | Retrieve / update / delete an heir | Yes |
+| GET, POST | `/api/bienes/` | List / create digital assets | Yes |
+| GET, PUT, PATCH, DELETE | `/api/bienes/{id}/` | Retrieve / update / delete an asset | Yes |
+| GET, POST | `/api/asignaciones/` | List / create asset allocations | Yes |
+| GET | `/api/docs/swagger/` | Interactive API docs | No |
+
+## Run locally
+    git clone https://github.com/ValenBelone7/safe-legacy-api.git
+    cd safe-legacy-api
+    python -m venv venv && source venv/bin/activate
+    pip install -r requirements.txt
+    cd src
+    python manage.py migrate
+    python manage.py createsuperuser
+    python manage.py runserver
+
+Then open http://127.0.0.1:8000/api/docs/swagger/, call `POST /api/token/` with your superuser, click **Authorize** and paste the `access` token.
+
+If you use [uv](https://docs.astral.sh/uv/), `uv sync` replaces the venv and pip steps.
+
+## What I learned
+- **Different serializers for reading and writing.** On `GET`, assets, heirs and allocations return their related objects nested (the owner, the heir's user account), so the client doesn't need extra requests. On `POST`/`PUT`, the same relations are sent as plain IDs. Each ViewSet picks its serializer in `get_serializer_class()` depending on the HTTP method.
+- **Avoiding N+1 queries.** Nested serializers trigger one query per related object. Using `select_related()` in the ViewSets (e.g. `bien__propietario`, `heredero__usuario` for allocations) loads everything in a single query.
+- **Refactoring from generic views to ViewSets and a router.** The API started with `@api_view` functions and concrete generic views; we unified everything into ViewSets registered in one `DefaultRouter`. That also made it simple to apply `IsAuthenticated` consistently and to generate the OpenAPI docs.
+- **401 vs 403.** Putting `JWTAuthentication` first in `DEFAULT_AUTHENTICATION_CLASSES` makes DRF answer `401` with a `WWW-Authenticate: Bearer` header instead of `403` when the token is missing.
+- **Modeling an inheritance split.** Instead of one heir per asset, an `Asignacion` table links assets and heirs with a percentage, so one asset can be divided between several heirs. Asset values use 8 decimal places so Bitcoin amounts like `0.05` fit.
+
+## Roadmap
+| Stage | Scope | Status |
+|---|---|---|
+| Assignments 1–2 | Models, nested serializers, CRUD with function and class-based views | Done |
+| Assignment 3 | ViewSets, central router, JWT auth | Done |
+| Extra | OpenAPI 3 docs with drf-spectacular | Done |
+| Next | Check-in endpoints and expiration logic | Planned |
+| Next | Inheritance release: transfer allocated assets to heirs | Planned |
+| Next | Wallet deposits and transfers | Planned |
+| Next | Per-owner object permissions and tests | Planned |
+
+**Known limitation:** any authenticated user can currently see and edit every asset, heir and allocation. Ownership-based permissions are on the roadmap.
+
+## University context
+This project was built for a university Django REST Framework course as a team assignment (*Trabajo Práctico*). The full original specification, in Spanish, with roles, business rules and the assignment checklist, is in [docs/README.es.md](docs/README.es.md).
+
+## Authors
+Valentín Belone · Tiago Pescara
