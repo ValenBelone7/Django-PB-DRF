@@ -17,3 +17,7 @@ media/
 # Editores
 .vscode/
 .idea/
+
+PLAN.md
+api.http
+drf-spectacular.md

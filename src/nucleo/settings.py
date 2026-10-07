@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'users',
     'bienes',
     'billeteras',
@@ -140,11 +141,25 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-    ]
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10),
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Safe Legacy API",
+    "DESCRIPTION": (
+        "API REST de Safe Legacy, una plataforma de herencia digital simulada. "
+        "Permite a un usuario Main registrar herederos, cargar bienes digitales y "
+        "asignarlos a sus herederos.\n\n"
+        "Todos los endpoints requieren autenticación: obtener un token en "
+        "`POST /api/token/` y usarlo con el botón **Authorize** (`Bearer <access>`)."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
